@@ -3,16 +3,16 @@ import dotenv from "dotenv";
 import morgan from "morgan";
 import postRoutes from "./src/routes/post.routes.js";
 import commentRoutes from "./src/routes/comment.routes.js";
-import config from "./src/config/index.js";
+import { testConnection } from "./src/config/db.js";
 
 dotenv.config();
 
 const app = express();
-const port = config.port;
+const port = process.env.PORT || 3000;
 
 app.use(express.json());
 
-if (config.nodeEnv === "development") {
+if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 } else {
   null;
@@ -23,6 +23,7 @@ app.use("/comments", commentRoutes);
 
 app.listen(port, () => {
   console.log(
-    `Server is running in ${config.nodeEnv} on http://localhost:${port}`
+    `Server is running in ${process.env.NODE_ENV} on http://localhost:${port}`
   );
+  testConnection();
 });
