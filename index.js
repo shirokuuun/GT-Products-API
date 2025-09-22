@@ -4,6 +4,7 @@ import morgan from "morgan";
 import postRoutes from "./src/routes/post.routes.js";
 import commentRoutes from "./src/routes/comment.routes.js";
 import { testConnection } from "./src/config/db.js";
+import { errorHandler } from "./src/middlewares/errorHandler.middleware.js";
 
 dotenv.config();
 
@@ -20,6 +21,8 @@ if (process.env.NODE_ENV === "development") {
 
 app.use("/posts", postRoutes);
 app.use("/comments", commentRoutes);
+
+app.use(errorHandler);
 
 app.listen(port, () => {
   console.log(

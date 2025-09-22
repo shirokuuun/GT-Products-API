@@ -1,13 +1,20 @@
+import { ApiError } from "../utils/ApiError.js";
 import pool from "../config/db.js";
 
 export const getAllPosts = async () => {
   const [posts] = await pool.query("SELECT * FROM posts");
+  if (!posts) {
+    throw new ApiError(500, "Could not retrieve posts.");
+  }
   return posts;
 };
 
 export const getPostById = async (id) => {
   const [rows] = await pool.query("SELECT * FROM posts WHERE id = ?", [id]);
-  return rows[0] || null;
+  if (!rows[0]) {
+    throw new ApiError(404, "Post not found.");
+  }
+  return rows[0];
 };
 
 export const createPost = async (postData) => {
@@ -27,7 +34,7 @@ export const updatePost = async (id, postData) => {
     [title, content, id]
   );
   if (result.affectedRows === 0) {
-    return null;
+    throw new ApiError(404, "Post not found.");
   }
   return getPostById(id);
 };
@@ -48,12 +55,15 @@ export const partiallyUpdatePost = async (id, updates) => {
   );
 
   if (result.affectedRows === 0) {
-    return null;
+    throw new ApiError(404, "Post not found.");
   }
   return getPostById(id);
 };
 
 export const deletePost = async (id) => {
   const [result] = await pool.query("DELETE FROM posts WHERE id = ?", [id]);
+  if (result.affectedRows === 0) {
+    throw new ApiError(404, "Cannot delete post.");
+  }
   return result.affectedRows > 0;
 };
