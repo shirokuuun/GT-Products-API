@@ -1,16 +1,18 @@
 import pool from "../config/db.js";
-import ApiError from "../utils/ApiError.js";
+import { ApiError } from "../utils/ApiError.js";
 
 export const createUser = async (userData) => {
   try {
     const { username, email } = userData;
-    const { result } = await pool.query(
-      "INSERT INTO users (username, email) VALUES (?, ?)",
+    const [result] = await pool.query(
+      "INSERT INTO users (username, email, createdAt) VALUES (?, ?, NOW())",
       [username, email]
     );
-    if (result.affectedRows) {
+    if (result.affectedRows === 0) {
       throw new ApiError(404, "User not found");
     }
+
+    return { id: result.insertId, username, email };
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
       throw new ApiError(409, "User already exists");
@@ -21,7 +23,7 @@ export const createUser = async (userData) => {
 };
 
 export const getUserById = async (id) => {
-  const { rows } = await pool.query("SELECT * FROM users WHERE id = ?", [id]);
+  const [rows] = await pool.query("SELECT * FROM users WHERE id = ?", [id]);
   if (rows.length === 0) {
     throw new ApiError(404, "Not Found");
   }
@@ -29,6 +31,6 @@ export const getUserById = async (id) => {
 };
 
 export const getAllUsers = async () => {
-  const { users } = await pool.query("SELECT * FROM users");
+  const [users] = await pool.query("SELECT * FROM users");
   return users;
 };

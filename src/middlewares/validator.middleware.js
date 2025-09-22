@@ -1,6 +1,10 @@
 import { body, validationResult } from "express-validator";
 
 export const validatePost = [
+  body("authorId")
+    .isInt({ min: 1 })
+    .withMessage("A valid author ID is required."),
+
   // Title must not be empty and is sanitized
   body("title").trim().notEmpty().withMessage("Title is required."),
 
