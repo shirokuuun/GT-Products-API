@@ -10,7 +10,8 @@ export const createUser = asyncHandler(async (req, res) => {
 });
 
 export const getUserById = asyncHandler(async (req, res) => {
-  const user = await userService.getUserById(req.params.id);
+  const userId = parseInt(req.params.id, 10);
+  const user = await userService.getUserById(userId);
   return res
     .status(200)
     .json(new ApiResponse(200, user, "User retrieved successfully"));
@@ -21,4 +22,13 @@ export const getAllUsers = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, users, "Users retrieved successfully"));
+});
+
+export const getPostsByUser = asyncHandler(async (req, res) => {
+  const userId = parseInt(req.params.userId, 10);
+  const posts = await userService.getPostsByUser(userId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, posts, "Posts by user retrieved successfully"));
 });

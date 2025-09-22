@@ -2,16 +2,57 @@ import pool from "../config/db.js";
 import { ApiError } from "../utils/ApiError.js";
 
 export const getAllPosts = async () => {
-  const [posts] = await pool.query("SELECT * FROM posts");
-  return posts;
+  const [posts] = await pool.query(`
+    SELECT 
+      p.id,
+      p.title,
+      p.content,
+      p.authorId,
+      u.username AS authorUsername,
+      u.email AS authorEmail
+    FROM posts p
+    JOIN users u ON p.authorId = u.id
+  `);
+  return posts.map((post) => ({
+    ...post,
+    author: {
+      id: post.authorId,
+      username: post.authorUsername,
+      email: post.authorEmail,
+    },
+  }));
 };
 
 export const getPostById = async (id) => {
-  const [rows] = await pool.query("SELECT * FROM posts WHERE id = ?", [id]);
+  const [rows] = await pool.query(
+    `
+    SELECT 
+      p.id,
+      p.title,
+      p.content,
+      p.authorId,
+      u.username AS authorUsername,
+      u.email AS authorEmail
+    FROM posts p
+    JOIN users u ON p.authorId = u.id
+    WHERE p.id = ?
+  `,
+    [id]
+  );
+
   if (!rows[0]) {
     throw new ApiError(404, "Post not found.");
   }
-  return rows[0];
+
+  const post = rows[0];
+  return {
+    ...post,
+    author: {
+      id: post.authorId,
+      username: post.authorUsername,
+      email: post.authorEmail,
+    },
+  };
 };
 
 export const createPost = async (postData) => {

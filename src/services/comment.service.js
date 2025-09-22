@@ -1,50 +1,37 @@
-let comments = [
-  {
-    id: 1,
-    text: "First text",
-    postId: 1,
-  },
-  {
-    id: 2,
-    text: "Second text",
-    postId: 2,
-  },
-];
-let nextId = 3;
-import { getPostById } from "./post.service.js";
+import pool from "../config/db.js";
+import { ApiError } from "../utils/ApiError.js";
 
-export const getAllComments = () => {
-  return comments;
-};
-
-export const getCommentsByPostId = (postId) => {
-  return comments.filter((c) => c.postId === postId);
-};
-
-export const createComment = (postId, commentData) => {
-  const post = getPostById(postId);
-  if (!post) {
-    return null;
+export const getAllComments = async () => {
+  const [rows] = await pool.query("SELECT * FROM comments");
+  if (!rows) {
+    throw new ApiError(404, "Comments not found");
   }
-  const newComment = { id: nextId++, postId, ...commentData };
-  comments.push(newComment);
-  return newComment;
+  return rows;
 };
 
-export const updateComment = (id, commentData) => {
-  const commentIndex = comments.findIndex((c) => c.id === id);
-  if (commentIndex === -1) {
-    return null;
+export const getCommentById = async (id) => {
+  const [rows] = await pool.query("SELECT * FROM comments WHERE id = ?", [id]);
+  if (rows.length === 0) {
+    throw new ApiError(404, "User comment not found");
   }
-  comments[commentIndex] = { ...comments[commentIndex], ...commentData };
-  return comments[commentIndex];
+  return rows[0];
 };
 
-export const deleteComment = (id) => {
-  const commentIndex = comments.findIndex((c) => c.id === id);
-  if (commentIndex === -1) {
-    return false;
+export const createComment = async (commentData) => {
+  try {
+    const { text, authorId, postId } = commentData;
+    const [result] = await pool.query(
+      "INSERT INTO comments (text, authorId, postId) VALUES (?, ?, ?)",
+      [text, authorId, postId]
+    );
+
+    if (result.affectedRows === 0) {
+      throw new ApiError(500, "Failed to create comment.");
+    }
+  } catch (error) {
+    if (error.code === "ER_NO_REFERENCED_ROW_2") {
+      throw new ApiError(400, "Invalid authorId or postId.");
+    }
+    throw error;
   }
-  comments.splice(commentIndex, 1);
-  return true;
 };
