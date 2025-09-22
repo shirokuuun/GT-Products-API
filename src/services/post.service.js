@@ -1,59 +1,96 @@
-import pool from "../config/db.js";
+import * as postService from "../services/post.service.js";
 
-export const getAllPosts = async () => {
-  const [posts] = await pool.query("SELECT * FROM posts");
-  return posts;
-};
-
-export const getPostById = async (id) => {
-  const [rows] = await pool.query("SELECT * FROM posts WHERE id = ?", [id]);
-  return rows[0] || null;
-};
-
-export const createPost = async (postData) => {
-  const { title, content } = postData;
-  const [result] = await pool.query(
-    "INSERT INTO posts (title, content) VALUES (?, ?)",
-    [title, content]
-  );
-  const newPostId = result.insertId;
-  return getPostById(newPostId);
-};
-
-export const updatePost = async (id, postData) => {
-  const { title, content } = postData;
-  const [result] = await pool.query(
-    "UPDATE posts SET title = ?, content = ? WHERE id = ?",
-    [title, content, id]
-  );
-  if (result.affectedRows === 0) {
-    return null;
+export const getAllPosts = async (req, res) => {
+  try {
+    const posts = await postService.getAllPosts();
+    res.json(posts);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error retrieving posts",
+      error: error.message,
+    });
   }
-  return getPostById(id);
 };
 
-export const partiallyUpdatePost = async (id, updates) => {
-  const fields = Object.keys(updates);
-  const values = Object.values(updates);
-
-  if (fields.length === 0) {
-    return getPostById(id);
+export const getPostById = async (req, res) => {
+  try {
+    const postId = parseInt(req.params.id, 10);
+    const post = await postService.getPostById(postId);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found." });
+    }
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error retrieving post",
+      error: error.message,
+    });
   }
-
-  const setClause = fields.map((field) => `${field} = ?`).join(", ");
-
-  const [result] = await pool.query(
-    `UPDATE posts SET ${setClause} WHERE id = ?`,
-    [...values, id]
-  );
-
-  if (result.affectedRows === 0) {
-    return null;
-  }
-  return getPostById(id);
 };
 
-export const deletePost = async (id) => {
-  const [result] = await pool.query("DELETE FROM posts WHERE id = ?", [id]);
-  return result.affectedRows > 0;
+export const createPost = async (req, res) => {
+  try {
+    const { title, content } = req.body;
+    if (!title || !content) {
+      return res
+        .status(400)
+        .json({ message: "Title and content are required." });
+    }
+
+    const newPost = await postService.createPost({ title, content });
+    res.status(201).json(newPost);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error creating post",
+      error: error.message,
+    });
+  }
+};
+
+export const updatePost = async (req, res) => {
+  try {
+    const postId = parseInt(req.params.id, 10);
+    const updatedPost = await postService.updatePost(postId, req.body);
+    if (!updatedPost) {
+      return res.status(404).json({ message: "Post not found." });
+    }
+    res.json(updatedPost);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error updating post",
+      error: error.message,
+    });
+  }
+};
+
+export const partiallyUpdatePost = async (req, res) => {
+  try {
+    const postId = parseInt(req.params.id, 10);
+    const updatedPost = await postService.partiallyUpdatePost(postId, req.body);
+    if (!updatedPost) {
+      return res.status(404).json({ message: "Post not found." });
+    }
+    res.json(updatedPost);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error partially updating post",
+      error: error.message,
+    });
+  }
+};
+
+export const deletePost = async (req, res) => {
+  try {
+    const postId = parseInt(req.params.id, 10);
+    const success = await postService.deletePost(postId);
+    if (!success) {
+      return res.status(404).json({ message: "Post not found." });
+    }
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({
+      message: "Error deleting post",
+      error: error.message,
+    });
+  }
 };
