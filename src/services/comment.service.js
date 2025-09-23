@@ -9,12 +9,14 @@ export const getAllComments = async () => {
   return rows;
 };
 
-export const getCommentById = async (id) => {
-  const [rows] = await pool.query("SELECT * FROM comments WHERE id = ?", [id]);
+export const getCommentsByPostId = async (postId) => {
+  const [rows] = await pool.query("SELECT * FROM comments WHERE postId = ?", [
+    postId,
+  ]);
   if (rows.length === 0) {
-    throw new ApiError(404, "User comment not found");
+    throw new ApiError(404, "Comments not found");
   }
-  return rows[0];
+  return rows;
 };
 
 export const createComment = async (commentData) => {
@@ -28,6 +30,17 @@ export const createComment = async (commentData) => {
     if (result.affectedRows === 0) {
       throw new ApiError(500, "Failed to create comment.");
     }
+
+    const [newComment] = await pool.query(
+      "SELECT * FROM comments WHERE id = ?",
+      [result.insertId]
+    );
+
+    if (!newComment[0]) {
+      throw new ApiError(500, "Failed to retrieve the new comment.");
+    }
+
+    return newComment[0];
   } catch (error) {
     if (error.code === "ER_NO_REFERENCED_ROW_2") {
       throw new ApiError(400, "Invalid authorId or postId.");
