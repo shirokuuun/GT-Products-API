@@ -26,8 +26,11 @@ export const getPostById = asyncHandler(async (req, res) => {
 });
 
 export const createPost = async (req, res) => {
+  const authorId = req.user.id;
+  const postData = req.body;
+
   try {
-    const newPost = await postService.createPost(req.body);
+    const newPost = await postService.createPost(postData, authorId);
     res
       .status(201)
       .json(new ApiResponse(201, newPost, "Post created successfully"));

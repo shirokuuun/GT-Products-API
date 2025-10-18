@@ -1,13 +1,14 @@
 import { Router } from "express";
 import { validatePost } from "../middlewares/validator.middleware.js";
 import { validateComment } from "../middlewares/validator.middleware.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 import * as postController from "../controllers/post.controller.js";
 import * as commentController from "../controllers/comment.controller.js";
 
 const router = Router();
 
 router.get("/", postController.getAllPosts);
-router.post("/", validatePost, postController.createPost);
+router.post("/", authMiddleware, validatePost, postController.createPost);
 router.post(
   "/:postId/comments",
   validateComment,
