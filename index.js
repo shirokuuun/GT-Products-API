@@ -4,6 +4,7 @@ import morgan from "morgan";
 import postRoutes from "./src/routes/post.routes.js";
 import commentRoutes from "./src/routes/comment.routes.js";
 import userRoutes from "./src/routes/user.routes.js";
+import authRoutes from "./src/routes/auth.routes.js";
 import { testConnection } from "./src/config/db.js";
 import { errorHandler } from "./src/middlewares/errorHandler.middleware.js";
 
@@ -20,6 +21,7 @@ if (process.env.NODE_ENV === "development") {
   null;
 }
 
+app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/users", userRoutes);
