@@ -16,8 +16,8 @@ router.post(
 );
 router.get("/:postId/comments", commentController.getCommentsByPostId);
 router.get("/:id", postController.getPostById);
-router.put("/:id", validatePost, postController.updatePost);
-router.delete("/:id", postController.deletePost);
+router.put("/:id", authMiddleware, validatePost, postController.updatePost);
+router.delete("/:id", authMiddleware, postController.deletePost);
 router.patch("/:id", postController.updatePost);
 
 export default router;

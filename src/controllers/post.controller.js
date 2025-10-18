@@ -43,19 +43,14 @@ export const createPost = async (req, res) => {
 };
 
 export const updatePost = async (req, res) => {
-  try {
-    const postId = parseInt(req.params.id, 10);
-    const updatedPost = await postService.updatePost(postId, req.body);
-    if (!updatedPost) {
-      return res.status(404).json({ message: "Post not found." });
-    }
-    res.json(updatedPost);
-  } catch (error) {
-    res.status(500).json({
-      message: "Error updating post",
-      error: error.message,
-    });
-  }
+  const postId = parseInt(req.params.id, 10);
+  const postData = req.body;
+  const userId = req.user.id; // Get the user ID from the middleware
+
+  const updatedPost = await postService.updatePost(postId, postData, userId);
+  res
+    .status(200)
+    .json(new ApiResponse(200, updatedPost, "Post updated successfully"));
 };
 
 export const partiallyUpdatePost = async (req, res) => {
@@ -75,17 +70,9 @@ export const partiallyUpdatePost = async (req, res) => {
 };
 
 export const deletePost = async (req, res) => {
-  try {
-    const postId = parseInt(req.params.id, 10);
-    const success = await postService.deletePost(postId);
-    if (!success) {
-      return res.status(404).json({ message: "Post not found." });
-    }
-    res.status(204).send();
-  } catch (error) {
-    res.status(500).json({
-      message: "Error deleting post",
-      error: error.message,
-    });
-  }
+  const postId = parseInt(req.params.id, 10);
+  const userId = req.user.id;
+
+  await postService.deletePost(postId, userId);
+  res.status(200).json(new ApiResponse(200, null, "Post deleted successfully"));
 };
