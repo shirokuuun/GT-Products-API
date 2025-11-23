@@ -1,0 +1,50 @@
+import pool from "../config/db.js";
+import { ApiError } from "../utils/ApiError.js";
+
+export const getAllComments = async () => {
+  const [rows] = await pool.query("SELECT * FROM comments");
+  if (!rows) {
+    throw new ApiError(404, "Comments not found");
+  }
+  return rows;
+};
+
+export const getCommentsByPostId = async (postId) => {
+  const [rows] = await pool.query("SELECT * FROM comments WHERE postId = ?", [
+    postId,
+  ]);
+  if (rows.length === 0) {
+    throw new ApiError(404, "Comments not found");
+  }
+  return rows;
+};
+
+export const createComment = async (commentData) => {
+  try {
+    const { text, authorId, postId } = commentData;
+    const [result] = await pool.query(
+      "INSERT INTO comments (text, authorId, postId) VALUES (?, ?, ?)",
+      [text, authorId, postId]
+    );
+
+    if (result.affectedRows === 0) {
+      throw new ApiError(500, "Failed to create comment.");
+    }
+
+    const [newComment] = await pool.query(
+      "SELECT * FROM comments WHERE id = ?",
+      [result.insertId]
+    );
+
+    if (!newComment[0]) {
+      throw new ApiError(500, "Failed to retrieve the new comment.");
+    }
+
+    return newComment[0];
+  } catch (error) {
+    if (error.code === "ER_NO_REFERENCED_ROW_2") {
+      throw new ApiError(400, "Invalid authorId or postId.");
+    }
+    throw error;
+  }
+};
