@@ -18,8 +18,7 @@ export const getCommentsByPostId = asyncHandler(async (req, res) => {
 });
 
 export const createComment = asyncHandler(async (req, res) => {
-  const postId = parseInt(req.params.postId, 10);
-  const { text, authorId } = req.body;
+  const { postId, text, authorId } = req.body;
   const newComment = await commentService.createComment({
     text,
     authorId,

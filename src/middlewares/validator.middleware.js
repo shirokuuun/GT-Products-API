@@ -20,7 +20,11 @@ export const validatePost = [
 export const validateComment = [
   body("text").trim().notEmpty().withMessage("Comment text is required."),
 
-  param("postId").isInt({ min: 1 }).withMessage("A valid post ID is required."),
+  body("postId")
+    .notEmpty()
+    .withMessage("A valid post ID is required.")
+    .isInt()
+    .withMessage("Post ID must be a number"),
 
   body("authorId")
     .isInt({ min: 1 })
